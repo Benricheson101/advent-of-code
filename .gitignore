@@ -1,3 +1,6 @@
 *.out
 *.swp
 input.txt
+node_modules
+build
+dist
