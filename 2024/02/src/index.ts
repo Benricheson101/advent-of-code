@@ -125,6 +125,7 @@ namespace Part1 {
     1
   >;
 
+  // full input hits tsc recursion limit but splitting in half and adding results works
   type Parsed1 = ParseInput<Input1>;
   type Parsed2 = ParseInput<Input2>;
   type Counts1 = CountSafeLines<Parsed1>;
