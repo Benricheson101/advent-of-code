@@ -1,38 +1,22 @@
 import type {Input1, Input2} from './input';
 import type {Add, GT, LT, Subtract} from './math';
 import type {RemoveElem} from './tuple';
+import type {Assert, SplitLines} from './util';
 
-export type Level = number;
-export type Levels = Level[];
-export type LevelsList = Levels[];
-
-export type Assert<A, _ extends A> = A;
-
-export type Cast<V, T> = V extends T ? V : never;
-
-export type SplitLines<
-  S extends string,
-  Lines extends string[] = [],
-> = S extends `${infer Fst extends string}\n${infer Rest extends string}`
-  ? SplitLines<Rest, [...Lines, Fst]>
-  : [...Lines, S];
-
-type Test_SplitLines = Assert<SplitLines<'abc\ndef'>, ['abc', 'def']>;
-
-export type ParseLevel<
+type ParseLevel<
   Line extends string,
-  Lvls extends Levels = [],
-> = Line extends `${infer A extends Level} ${infer Rest extends string}`
+  Lvls extends number[] = [],
+> = Line extends `${infer A extends number} ${infer Rest extends string}`
   ? ParseLevel<Rest, [...Lvls, A]>
-  : Line extends `${infer A extends Level}`
+  : Line extends `${infer A extends number}`
     ? [...Lvls, A]
     : Lvls;
 
 type Test_ParseLevel = Assert<ParseLevel<'1 2 3 4 5'>, [1, 2, 3, 4, 5]>;
 
-export type ParseLevels<
+type ParseLevels<
   Lines extends string[],
-  Lvls extends LevelsList = [],
+  Lvls extends number[][] = [],
 > = Lines extends [infer Head extends string, ...infer Tail extends string[]]
   ? ParseLevels<Tail, [...Lvls, ParseLevel<Head>]>
   : Lvls;
@@ -42,7 +26,7 @@ type Test_ParseLevels = Assert<
   [[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]]
 >;
 
-export type ParseInput<S extends string> = ParseLevels<SplitLines<S>>;
+type ParseInput<S extends string> = ParseLevels<SplitLines<S>>;
 
 type Test_ParseInput = Assert<
   ParseInput<'1 2 3 4 5\n6 7 8 9 0'>,
@@ -65,47 +49,71 @@ type IsDecreasing<A extends number, B extends number> = LT<B, A> extends true
 
 type Test_IsDecreasing = Assert<IsDecreasing<5, 1>, false>;
 
+type AllIncreasing<L extends number[]> = L extends []
+  ? true
+  : L extends [
+        infer A extends number,
+        infer B extends number,
+        ...infer Rest extends number[],
+      ]
+    ? IsIncreasing<A, B> extends true
+      ? AllIncreasing<[B, ...Rest]>
+      : false
+    : true;
+
+type Test_AllIncreasing = Assert<AllIncreasing<[1, 3, 4, 6, 8, 11]>, true>;
+
+type AllDecreasing<L extends number[]> = L extends []
+  ? true
+  : L extends [
+        infer A extends number,
+        infer B extends number,
+        ...infer Rest extends number[],
+      ]
+    ? IsDecreasing<A, B> extends true
+      ? AllDecreasing<[B, ...Rest]>
+      : false
+    : true;
+
+type Test_AllDecreasing = Assert<AllDecreasing<[11, 8, 6, 4, 2, 1]>, true>;
+
+type IsSafe<Line extends number[]> = AllIncreasing<Line> extends true
+  ? true
+  : AllDecreasing<Line> extends true
+    ? true
+    : false;
+
+type Rmv1<
+  T extends number[],
+  R extends number[][] = [],
+> = R['length'] extends T['length']
+  ? [T, ...R]
+  : Rmv1<T, [...R, RemoveElem<R['length'], T>]>;
+
+type Test_Rmv1 = Assert<
+  Rmv1<[1, 2, 3, 3]>,
+  [[1, 2, 3, 3], [2, 3, 3], [1, 3, 3], [1, 2, 3], [1, 2, 3]]
+>;
+//   ^?
+
+type AnySafe<T extends number[][]> = T extends [
+  infer Head extends number[],
+  ...infer Rest extends number[][],
+]
+  ? IsSafe<Head> extends true
+    ? true
+    : AnySafe<Rest>
+  : false;
+
+type Test_AnySafe = Assert<AnySafe<[[1, 2, 3], [1, 10, 2]]>, true>;
+
 namespace Part1 {
-  export type AllIncreasing<L extends number[]> = L extends []
-    ? true
-    : L extends [
-          infer A extends number,
-          infer B extends number,
-          ...infer Rest extends number[],
-        ]
-      ? IsIncreasing<A, B> extends true
-        ? AllIncreasing<[B, ...Rest]>
-        : false
-      : true;
-
-  type Test_AllIncreasing = Assert<AllIncreasing<[1, 3, 4, 6, 8, 11]>, true>;
-
-  export type AllDecreasing<L extends number[]> = L extends []
-    ? true
-    : L extends [
-          infer A extends number,
-          infer B extends number,
-          ...infer Rest extends number[],
-        ]
-      ? IsDecreasing<A, B> extends true
-        ? AllDecreasing<[B, ...Rest]>
-        : false
-      : true;
-
-  type Test_AllDecreasing = Assert<AllDecreasing<[11, 8, 6, 4, 2, 1]>, true>;
-
-  export type IsSafe<Line extends Levels> = AllIncreasing<Line> extends true
-    ? true
-    : AllDecreasing<Line> extends true
-      ? true
-      : false;
-
   type CountSafeLines<
-    Lines extends LevelsList,
+    Lines extends number[][],
     N extends number = 0,
   > = Lines extends [
-    infer Line extends Levels,
-    ...infer Rest extends LevelsList,
+    infer Line extends number[],
+    ...infer Rest extends number[][],
   ]
     ? IsSafe<Line> extends true
       ? CountSafeLines<Rest, Add<N, 1>>
@@ -123,36 +131,11 @@ namespace Part1 {
   type Counts2 = CountSafeLines<Parsed2>;
 
   export type Solution = Add<Counts1, Counts2>;
-  //          ^?
 }
 
 namespace Part2 {
-  type Rmv1<
-    T extends number[],
-    R extends number[][] = [],
-  > = R['length'] extends T['length']
-    ? [T, ...R]
-    : Rmv1<T, [...R, RemoveElem<R['length'], T>]>;
-
-  type Test_Rmv1 = Assert<
-    Rmv1<[1, 2, 3, 3]>,
-    [[1, 2, 3, 3], [2, 3, 3], [1, 3, 3], [1, 2, 3], [1, 2, 3]]
-  >;
-  //   ^?
-
-  type AnySafe<T extends number[][]> = T extends [
-    infer Head extends number[],
-    ...infer Rest extends number[][],
-  ]
-    ? Part1.IsSafe<Head> extends true
-      ? true
-      : AnySafe<Rest>
-    : false;
-
-  type Test_AnySafe = Assert<AnySafe<[[1, 2, 3], [1, 10, 2]]>, true>;
-
   type CountSafeLines<
-    Lines extends LevelsList,
+    Lines extends number[][],
     N extends number = 0,
   > = Lines extends [
     infer Line extends number[],
@@ -169,7 +152,6 @@ namespace Part2 {
   type Counts2 = CountSafeLines<Parsed2>;
 
   export type Solution = Add<Counts1, Counts2>;
-  //          ^?
 }
 
 type Part1Solution = Part1.Solution;

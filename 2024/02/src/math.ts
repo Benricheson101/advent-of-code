@@ -1,5 +1,5 @@
-import type {Assert, Cast} from '.';
 import type {SizedTuple} from './tuple';
+import type {Assert, Cast} from './util';
 
 export type Add<A extends number, B extends number> = Cast<
   [...SizedTuple<A>, ...SizedTuple<B>]['length'],

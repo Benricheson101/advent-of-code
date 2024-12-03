@@ -1,5 +1,3 @@
-import type {Add, Subtract} from './math';
-
 export type SizedTuple<
   N extends number,
   T extends number[] = [],
