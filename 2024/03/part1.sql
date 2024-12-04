@@ -1,28 +1,31 @@
 -- sqlite3 < part1.sql
 
 with recursive cte(a, rest) as (
-  select '', readfile('input') as rest
+  select
+    '',
+    readfile('input')
   union all
     select
-      substr(rest, 1, instr(rest, ')')) as a,
-      substr(rest, instr(rest, ')')+1) as rest
+      substr(rest, 1, instr(rest, ')')) a,
+      substr(rest, instr(rest, ')') + 1) rest
     from cte
     where rest like '%mul(%'
 ),
-numbers as (
+numbers(n) as (
   select
-    replace(a, rtrim(a, replace(a, '(', '')), '') n,
-    a
+    replace(a, rtrim(a, replace(a, '(', '')), '') n
   from cte
   where a regexp 'mul\(\d+,\d+\)$'
 ),
-numbers2 as (
+numbers2(l, r) as (
   select
-    cast(substr(n, 1, instr(n, ',')-1) as integer) as l,
-    cast(substr(n, instr(n, ',')+1) as integer) as r,
-    n, a
+    cast(substr(n, 1, instr(n, ',') - 1) as integer) l,
+    cast(substr(n, instr(n, ',') + 1) as integer) r
   from numbers
-  where n != '' and l and r
+  where
+    n != ''
+    and l
+    and r
 )
 select sum(l * r) part1_solution
 from numbers2

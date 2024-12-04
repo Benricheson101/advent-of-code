@@ -1,19 +1,22 @@
 -- sqlite3 < part2.sql
 
 with recursive cte(keep, a, rest) as (
-  select false, '', readfile('input') || 'do()' as rest
+  select
+    false,
+    '',
+    readfile('input') || 'do()'
   union all
     select
       keep,
-      substr(rest, 1, instr(rest, ')')) as a,
-      substr(rest, instr(rest, ')')+1) as rest
+      substr(rest, 1, instr(rest, ')')) a,
+      substr(rest, instr(rest, ')') + 1) rest
     from cte
   where
     rest like '%mul(%'
     or rest like '%do()%'
     or rest like '%dont''()%'
 ),
-numbers as (
+numbers(n, a, id, rest, keep) as (
   select
     replace(a, rtrim(a, replace(a, '(', '')), '') n,
     a,
@@ -30,19 +33,19 @@ numbers as (
     or a like '%do()'
     or a like '%don''t()'
 ),
-numbers2 as (
+numbers2(n, id, l, r) as (
   select
     n,
     id,
-    cast(substr(n, 1, instr(n, ',')-1) as integer) as l,
-    cast(substr(n, instr(n, ',')+1) as integer) as r
+    cast(substr(n, 1, instr(n, ',') - 1) as integer) l,
+    cast(substr(n, instr(n, ',') + 1) as integer) r
   from numbers
   where
     n != ''
     and l
     and r
 ),
-numbers3 as (
+numbers3(id, keep, prev_keep, prev_id) as (
   select
     id,
     keep,
