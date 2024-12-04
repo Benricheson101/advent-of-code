@@ -24,5 +24,5 @@ numbers2 as (
   from numbers
   where n != '' and l and r
 )
-select sum(l * r) n
+select sum(l * r) part1_solution
 from numbers2

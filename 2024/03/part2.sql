@@ -53,7 +53,7 @@ numbers3 as (
     a like '%do()'
     or a like '%don''t()'
 )
-select sum (n2.l * n2.r)
+select sum (n2.l * n2.r) part2_solution
 from numbers3 n3
 join numbers2 n2
 where
