@@ -10,8 +10,8 @@ with recursive cte(keep, a, rest) as (
     from cte
   where
     rest like '%mul(%'
-      or rest like '%do()%'
-      or rest like '%dont''()%'
+    or rest like '%do()%'
+    or rest like '%dont''()%'
 ),
 numbers as (
   select
@@ -27,16 +27,20 @@ numbers as (
   from cte
   where
     a regexp 'mul\(\d+,\d+\)$'
-      or a like '%do()'
-      or a like '%don''t()'
+    or a like '%do()'
+    or a like '%don''t()'
 ),
 numbers2 as (
   select
+    n,
+    id,
     cast(substr(n, 1, instr(n, ',')-1) as integer) as l,
-    cast(substr(n, instr(n, ',')+1) as integer) as r,
-    n, a, id
+    cast(substr(n, instr(n, ',')+1) as integer) as r
   from numbers
-  where n != '' and l and r
+  where
+    n != ''
+    and l
+    and r
 ),
 numbers3 as (
   select
@@ -44,13 +48,17 @@ numbers3 as (
     keep,
     lag(keep, 1, true) over () prev_keep,
     lag(id, 1, 0) over () prev_id
-    , a
   from numbers
-  where a like '%do()' or a like '%don''t()'
+  where
+    a like '%do()'
+    or a like '%don''t()'
 )
 select sum (n2.l * n2.r)
 from numbers3 n3
 join numbers2 n2
 where
   prev_keep
-    and (n2.id >= n3.prev_id + 1 and n2.id <= n3.id - 1)
+  and (
+    n2.id >= n3.prev_id + 1
+    and n2.id <= n3.id - 1
+  )
