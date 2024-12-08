@@ -4,7 +4,7 @@
 
 include "./util";
 
-def mat(n):
+def find(n):
   . as $lines |
   {"(?=M.M)": "(?=S.S)", "(?=S.S)": "(?=M.M)", "(?=S.M)": "(?=S.M)", "(?=M.S)": "(?=M.S)"} as $regexs |
   $regexs[] as $r |
@@ -19,7 +19,7 @@ def solution:
   $input[:-2] as $shortinput |
   [
     [range($shortinput | length)][] as $idx |
-    $input | mat($idx)
+    $input | find($idx)
   ] | length
 ;
 
