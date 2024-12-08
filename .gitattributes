@@ -1,2 +1,2 @@
 *.sql linguist-detectable
-input.ts -linguist-detectable
+2024/02/src/input.ts -linguist-detectable
